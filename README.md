@@ -43,7 +43,7 @@ pip install -r requirements.txt
 ```env
 QDRANT_HOST=localhost
 QDRANT_API_KEY=
-EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
+EMBEDDING_MODEL_NAME=all-mpnet-base-v2
 LLM_MODEL_NAME=gemini-2.5-flash
 COLLECTION_NAME=my_documents
 GEMINI_MODEL_NAME=gemini-pro
