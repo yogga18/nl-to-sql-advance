@@ -62,7 +62,7 @@ Buka http://127.0.0.1:8000/docs untuk melihat Swagger/OpenAPI.
 
 - `QDRANT_HOST` — host Qdrant
 - `QDRANT_API_KEY` — API key Qdrant (opsional)
-- `EMBEDDING_MODEL_NAME` — nama model embedding (mis. `all-MiniLM-L6-v2`)
+- `EMBEDDING_MODEL_NAME` — nama model embedding (mis. `all-mpnet-base-v2`)
 - `LLM_MODEL_NAME` — model default LLM
 - `COLLECTION_NAME` — nama koleksi Qdrant
 - `GEMINI_MODEL_NAME` — contoh nama model Gemini
