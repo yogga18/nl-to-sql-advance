@@ -1,0 +1,71 @@
+version: 1.0
+database: db_eis_v1
+description: >
+  Main data schema yang mendeskripsikan seluruh struktur tabel dalam sistem DRAUK.
+  File ini berfungsi sebagai buku besar yang mengarahkan ke masing-masing schema spesifik
+  untuk memudahkan analisis otomatis, query generation, dan integrasi dengan LLM.
+
+tables:
+  - name: drauk_unit_prognosis
+    file: ./drauk_unit_prognosis.yml
+    description: >
+      Menyimpan data prognosis unit terkait anggaran dan realisasi kegiatan tahunan.
+    key_fields:
+      - Kode_Unit
+      - Tahun_Anggaran
+    type: financial_planning
+    importance_score: 0.8
+    # relationships:
+    #   - table: drauk_unit_lengkap
+    #     type: one_to_one
+    #     local_key: Kode_Unit
+    #     remote_key: Kode_Unit
+    #   - table: drauk_unit_capaian
+    #     type: one_to_many
+    #     local_key: Kode_DRAUK
+    #     remote_key: Kode_DRAUK
+
+  - name: drauk_unit_lengkap
+    file: ./drauk_unit_lengkap.yml
+    description: >
+      Menyimpan data master unit lengkap termasuk kode, nama, kategori, dan tipe unit.
+    key_fields:
+      - Kode_Unit
+    type: master_reference
+    importance_score: 0.85
+
+  - name: drauk_unit
+    file: ./drauk_unit.yml
+    description: >
+      Menyimpan data realisasi capaian kegiatan berdasarkan indikator dari setiap unit.
+    key_fields:
+      - Kode_DRAUK
+    type: performance_data
+    importance_score: 0.9
+
+routing_rules:
+  - condition: "pertanyaan mengandung 'pprognosis' atau 'rencana target' atau 'bulan' atau 'deviasi' atau 'realisasi bulan' atau 'kumulatif'"
+    route_to: drauk_unit_prognosis
+
+  - condition: "pertanyaan mengandung 'program strategis' atau 'indikator kinerja program strategis' atau 'sasaran strategis' atau indikator sasaran strategis' atau 'target' atau 'capaian'"
+    route_to: drauk_unit_lengkap
+
+  - condition: "default"
+    route_to: drauk_unit
+
+metadata:
+  owner: Yogga Aditya Candra
+  created_at: 2025-10-19
+  last_updated: 2025-10-19
+  version_control: git
+  environment: production
+  notes: >
+    Pastikan untuk memperbarui schema ini setiap kali ada perubahan struktural pada tabel terkait.
+    Gunakan file schema spesifik untuk detail kolom dan aturan bisnis masing-masing tabel.
+    File ini adalah titik awal untuk semua query dan analisis berbasis LLM terkait data DRAUK.
+    Selalu verifikasi hubungan antar tabel untuk memastikan integritas data.
+    Gunakan `importance_score` untuk memprioritaskan tabel dalam analisis otomatis.
+    Kategori tabel membantu dalam klasifikasi dan pengelompokan data untuk analisis yang lebih baik.
+    Routing rules membantu dalam menentukan tabel mana yang paling relevan untuk pertanyaan tertentu.
+    Pastikan semua file schema spesifik (seperti drauk_unit_prognosis.yml)
+    selalu sinkron dengan struktur tabel di database.

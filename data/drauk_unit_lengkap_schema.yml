@@ -1,0 +1,234 @@
+spec:
+  drauk_unit_lengkap:
+    description: >
+      Tabel ini berisi data lengkap mengenai Rencana Kegiatan dan Anggaran Tahunan (RKAT) di tingkat unit universitas.
+      Data mencakup hierarki sasaran strategis, program strategis, indikator kinerja, kegiatan, serta rincian anggaran dan realisasinya.
+      Informasi di dalam tabel ini digunakan untuk menganalisis efektivitas dan efisiensi penggunaan anggaran di setiap unit kerja.
+
+    business_rules:
+      - "Kolom `Jumlah` adalah total pagu anggaran yang direncanakan."
+      - "Kolom `Realisasi` menunjukkan dana yang telah digunakan."
+      - "Kolom `Sisa` merupakan hasil perhitungan dari (`Jumlah` - `Realisasi`)."
+      - "Gunakan kolom `Tahun_Anggaran` untuk filter waktu."
+      - "Hierarki: `Sasaran_Strategis` → `Program_Strategis` → `Kegiatan_Unit`."
+      - "Gunakan `Kode_Unit` atau `Nama_Unit` untuk agregasi berdasarkan unit."
+      - "Gunakan `Harga_Satuan * Volume` untuk menghitung total jika `Jumlah` tidak tersedia."
+      - "Kolom `Sumber_Dana` dan `Detail_Sumber_Dana` dapat digunakan untuk klasifikasi sumber pendanaan."
+
+    common_questions:
+      - question: "Berapa total pagu anggaran universitas?"
+        sql_logic: "SELECT SUM(Jumlah) FROM drauk_unit_lengkap"
+      - question: "Unit mana yang memiliki realisasi anggaran tertinggi?"
+        sql_logic: "SELECT Nama_Unit, SUM(Realisasi) FROM drauk_unit_lengkap GROUP BY Nama_Unit ORDER BY SUM(Realisasi) DESC LIMIT 1"
+      - question: "Berapa sisa anggaran pada tahun 2024?"
+        sql_logic: "SELECT SUM(Sisa) FROM drauk_unit_lengkap WHERE Tahun_Anggaran = 2024"
+      - question: "Apa saja kegiatan di bawah program strategis X?"
+        sql_logic: "SELECT DISTINCT Kegiatan_Unit FROM drauk_unit_lengkap WHERE Program_Strategis = 'X'"
+      - question: "Bandingkan pagu dan realisasi Fakultas Ekonomi."
+        sql_logic: "SELECT SUM(Jumlah), SUM(Realisasi), SUM(Sisa) FROM drauk_unit_lengkap WHERE Nama_Unit LIKE '%Ekonomi%'"
+
+    columns:
+      - name: "Tahun_Anggaran"
+        data_type: "int(11)"
+        description: "Tahun fiskal kegiatan berjalan."
+        synonyms: ["tahun", "periode", "tahun anggaran"]
+
+      - name: "Kode_DRAUK"
+        data_type: "bigint(20)"
+        description: "Kode unik dokumen DRAUK (Rencana Anggaran Unit Kerja)."
+        synonyms: ["kode drauk", "dokumen anggaran"]
+
+      - name: "Indikator_Tujuan"
+        data_type: "text"
+        description: "Indikator yang menggambarkan tujuan strategis kegiatan."
+        synonyms: ["indikator tujuan", "tujuan program"]
+
+      - name: "Kode_SS"
+        data_type: "varchar(20)"
+        description: "Kode sasaran strategis universitas."
+        synonyms: ["kode ss", "kode sasaran"]
+
+      - name: "Sasaran_Strategis"
+        data_type: "text"
+        description: "Deskripsi sasaran strategis universitas."
+        synonyms: ["sasaran strategis", "target strategis"]
+
+      - name: "Kode_IKSS"
+        data_type: "varchar(20)"
+        description: "Kode indikator kinerja sasaran strategis."
+        synonyms: ["kode ikss", "indikator kinerja ss"]
+
+      - name: "Indikator_Kinerja_Sasaran_Strategis"
+        data_type: "text"
+        description: "Indikator kinerja untuk sasaran strategis universitas."
+        synonyms: ["indikator kinerja sasaran", "indikator ss"]
+
+      - name: "Kode_PS"
+        data_type: "varchar(20)"
+        description: "Kode program strategis universitas."
+        synonyms: ["kode ps", "kode program strategis"]
+
+      - name: "Program_Strategis"
+        data_type: "text"
+        description: "Nama atau deskripsi program strategis universitas."
+        synonyms: ["program strategis", "program utama"]
+
+      - name: "Kode_IKPS"
+        data_type: "varchar(20)"
+        description: "Kode indikator kinerja program strategis."
+        synonyms: ["kode ikps", "indikator kinerja program"]
+
+      - name: "Indikator_Kinerja_Program_Strategis"
+        data_type: "text"
+        description: "Indikator kinerja dari program strategis."
+        synonyms: ["indikator ps", "indikator program strategis"]
+
+      - name: "Kode_Unit"
+        data_type: "varchar(20)"
+        description: "Kode unit pelaksana kegiatan."
+        synonyms: ["kode unit kerja", "id unit"]
+
+      - name: "Nama_Unit"
+        data_type: "varchar(255)"
+        description: "Nama lengkap unit pelaksana kegiatan."
+        synonyms: ["nama unit kerja", "unit pelaksana"]
+
+      - name: "Tipe_Unit"
+        data_type: "varchar(50)"
+        description: "Jenis unit, seperti fakultas, biro, lembaga, atau pusat."
+        synonyms: ["tipe unit kerja", "jenis unit"]
+
+      - name: "Kegiatan_Universitas"
+        data_type: "text"
+        description: "Nama kegiatan di tingkat universitas."
+        synonyms: ["kegiatan universitas", "agenda universitas"]
+
+      - name: "Indikator_Capaian"
+        data_type: "text"
+        description: "Indikator capaian kegiatan unit."
+        synonyms: ["indikator capaian", "indikator output"]
+
+      - name: "Kegiatan_Unit"
+        data_type: "text"
+        description: "Nama kegiatan yang dilaksanakan oleh unit."
+        synonyms: ["aktivitas unit", "kegiatan unit kerja"]
+
+      - name: "Kode_Standar_Kegiatan"
+        data_type: "varchar(50)"
+        description: "Kode standar kegiatan yang menjadi acuan pelaksanaan."
+        synonyms: ["kode standar", "kode kegiatan standar"]
+
+      - name: "Standar_Kegiatan"
+        data_type: "text"
+        description: "Standar kegiatan yang digunakan sebagai pedoman pelaksanaan."
+        synonyms: ["standar kerja", "standar aktivitas"]
+
+      - name: "FTE"
+        data_type: "varchar(50)"
+        description: "Full Time Equivalent — estimasi proporsi waktu SDM untuk kegiatan."
+        synonyms: ["fte", "proporsi waktu"]
+
+      - name: "Detail_Kegiatan"
+        data_type: "text"
+        description: "Rincian detail pelaksanaan kegiatan unit."
+        synonyms: ["rincian kegiatan", "uraian kegiatan"]
+
+      - name: "Kelompok_Pagu"
+        data_type: "varchar(50)"
+        description: "Kategori atau kelompok pagu anggaran."
+        synonyms: ["kelompok pagu", "kategori pagu"]
+
+      - name: "Akun"
+        data_type: "varchar(50)"
+        description: "Kode akun anggaran berdasarkan COA."
+        synonyms: ["kode akun", "akun keuangan"]
+
+      - name: "COA"
+        data_type: "varchar(50)"
+        description: "Chart of Account yang menjadi referensi akun keuangan."
+        synonyms: ["coa", "chart of account"]
+
+      - name: "Nama_COA"
+        data_type: "text"
+        description: "Nama lengkap dari akun COA."
+        synonyms: ["nama akun", "uraian coa"]
+
+      - name: "Satuan_Kegiatan"
+        data_type: "varchar(50)"
+        description: "Satuan yang digunakan untuk mengukur kegiatan."
+        synonyms: ["unit kegiatan", "satuan kerja"]
+
+      - name: "Barjas"
+        data_type: "varchar(50)"
+        description: "Menunjukkan apakah kegiatan termasuk Barang/Jasa."
+        synonyms: ["barang jasa", "barjas"]
+
+      - name: "Volume_1"
+        data_type: "varchar(50)"
+        description: "Volume pertama kegiatan."
+        synonyms: ["volume 1", "jumlah 1", "kuantitas 1", "volume satu", "jumlah satu", "kuantitas satu"]
+
+      - name: "Satuan_1"
+        data_type: "varchar(50)"
+        description: "Satuan untuk volume 1."
+        synonyms: ["satuan 1", "unit 1", "satuan satu", "unit satu"]
+
+      - name: "Volume_2"
+        data_type: "varchar(50)"
+        description: "Volume kedua kegiatan (opsional)."
+        synonyms: ["volume 2", "jumlah 2", "kuantitas 2", "volume dua", "jumlah dua", "kuantitas dua"]
+
+      - name: "Satuan_2"
+        data_type: "varchar(50)"
+        description: "Satuan untuk volume 2."
+        synonyms: ["satuan 2", "unit 2", "satuan dua", "unit dua"]
+
+      - name: "Volume_3"
+        data_type: "varchar(50)"
+        description: "Volume ketiga kegiatan (opsional)."
+        synonyms: ["volume 3", "jumlah 3", "kuantitas 3", "volume tiga", "jumlah tiga", "kuantitas tiga"]
+
+      - name: "Satuan_3"
+        data_type: "varchar(50)"
+        description: "Satuan untuk volume 3."
+        synonyms: ["satuan 3", "unit 3", "satuan tiga", "unit tiga"]
+
+      - name: "Volume_4"
+        data_type: "varchar(50)"
+        description: "Volume keempat kegiatan (opsional)."
+        synonyms: ["volume 4", "jumlah 4", "kuantitas 4", "volume empat", "jumlah empat", "kuantitas empat"]
+
+      - name: "Satuan_4"
+        data_type: "varchar(50)"
+        description: "Satuan untuk volume 4."
+        synonyms: ["satuan 4", "unit 4", "satuan empat", "unit empat"]
+
+      - name: "Harga_Satuan"
+        data_type: "decimal(18,2)"
+        description: "Harga satuan per kegiatan."
+        synonyms: ["harga unit", "biaya satuan"]
+
+      - name: "Sumber_Dana"
+        data_type: "varchar(100)"
+        description: "Sumber utama pendanaan kegiatan (APBN, PNBP, dll)."
+        synonyms: ["asal dana", "sumber anggaran"]
+
+      - name: "Detail_Sumber_Dana"
+        data_type: "varchar(100)"
+        description: "Rincian lebih detail dari sumber dana kegiatan."
+        synonyms: ["detail dana", "rincian sumber dana"]
+
+      - name: "Jumlah"
+        data_type: "decimal(18,2)"
+        description: "Total pagu atau jumlah anggaran kegiatan."
+        synonyms: ["total anggaran", "pagu"]
+
+      - name: "Realisasi"
+        data_type: "decimal(18,2)"
+        description: "Jumlah dana yang telah digunakan untuk kegiatan."
+        synonyms: ["realisasi anggaran", "pengeluaran"]
+
+      - name: "Sisa"
+        data_type: "decimal(18,2)"
+        description: "Sisa anggaran kegiatan (pagu dikurangi realisasi)."
+        synonyms: ["saldo anggaran", "sisa pagu"]

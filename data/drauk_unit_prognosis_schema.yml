@@ -1,0 +1,165 @@
+spec:
+  drauk_unit_prognosis:
+    description: >
+      Tabel ini berisi data prognosis (perkiraan dan realisasi) anggaran tahunan untuk setiap unit kerja di universitas.
+      Data mencakup rincian kegiatan, akun, COA, serta distribusi anggaran dan realisasi per bulan selama satu tahun fiskal.
+      Tabel ini digunakan untuk analisis perbandingan antara rencana dan realisasi anggaran bulanan setiap unit.
+
+    business_rules:
+      - "Kolom `Jumlah_Anggaran` merepresentasikan total pagu tahunan per kegiatan."
+      - "Kolom `Realisasi` adalah total realisasi anggaran tahunan."
+      - "Kolom `Sisa_Anggaran` = `Jumlah_Anggaran` - `Realisasi`."
+      - "Kolom `Jumlah_Anggaran_<Bulan>` dan `Realisasi_<Bulan>` menunjukkan distribusi dan realisasi bulanan."
+      - "Gunakan kolom `Tahun_Anggaran` untuk filter waktu dan analisis per tahun."
+      - "Kolom `Nama_Unit` dan `Program_Strategis` dapat digunakan untuk agregasi per unit atau program."
+
+    common_questions:
+      - question: "Berapa total realisasi anggaran tahun ini?"
+        sql_logic: "Gunakan SUM(Realisasi) dengan filter Tahun_Anggaran."
+      - question: "Unit mana yang memiliki selisih (sisa anggaran) paling besar?"
+        sql_logic: "Gunakan SUM(Sisa_Anggaran) GROUP BY Nama_Unit ORDER BY SUM(Sisa_Anggaran) DESC."
+      - question: "Bandingkan jumlah anggaran dan realisasi bulan Maret."
+        sql_logic: "Gunakan SUM(Jumlah_Anggaran_Maret) dan SUM(Realisasi_Maret)."
+      - question: "Bagaimana tren realisasi bulanan untuk Unit X?"
+        sql_logic: "Ambil kolom Realisasi_Januari...Realisasi_Desember untuk unit tersebut dan tampilkan dalam urutan bulan."
+
+    columns:
+      - name: "Tahun_Anggaran"
+        data_type: "int(11)"
+        description: "Tahun fiskal atau periode anggaran berjalan."
+        # is_numeric: true
+        # importance_score: 9
+        synonyms: ["tahun", "periode", "tahun anggaran"]
+
+      - name: "Kode_DRAUK"
+        data_type: "bigint(20)"
+        description: "Kode unik dokumen DRAUK untuk identifikasi kegiatan."
+        # is_numeric: true
+        # importance_score: 8
+        synonyms: ["kode drauk", "id drauk"]
+
+      - name: "Kode_Unit"
+        data_type: "varchar(20)"
+        description: "Kode unit kerja pelaksana kegiatan."
+        # is_categorical: true
+        # importance_score: 9
+        synonyms: ["kode unit kerja", "id unit"]
+
+      - name: "Nama_Unit"
+        data_type: "varchar(255)"
+        description: "Nama lengkap unit kerja pelaksana kegiatan."
+        # is_textual: true
+        # importance_score: 10
+        synonyms: ["unit", "nama unit kerja", "unit pelaksana"]
+
+      - name: "Tipe_Unit"
+        data_type: "varchar(50)"
+        description: "Jenis unit seperti fakultas, biro, lembaga, atau pusat studi."
+        # is_categorical: true
+        # importance_score: 6
+        synonyms: ["tipe unit", "jenis unit"]
+
+      - name: "Kategori_Unit"
+        data_type: "varchar(50)"
+        description: "Kategori pengelompokan unit kerja."
+        # is_categorical: true
+        # importance_score: 6
+        synonyms: ["kategori unit", "kelompok unit"]
+
+      - name: "Kegiatan_Universitas"
+        data_type: "text"
+        description: "Nama kegiatan utama tingkat universitas."
+        # is_textual: true
+        # importance_score: 7
+        synonyms: ["kegiatan universitas", "agenda universitas"]
+
+      - name: "Kegiatan_Unit"
+        data_type: "text"
+        description: "Nama kegiatan yang dilakukan oleh unit kerja."
+        # is_textual: true
+        # importance_score: 8
+        synonyms: ["aktivitas unit", "kegiatan unit"]
+
+      - name: "Indikator_Capaian"
+        data_type: "text"
+        description: "Indikator capaian dari kegiatan unit kerja."
+        # is_textual: true
+        # importance_score: 7
+        synonyms: ["indikator capaian", "indikator output"]
+
+      - name: "Kode_Standar_Kegiatan"
+        data_type: "varchar(50)"
+        description: "Kode standar acuan untuk kegiatan."
+        # is_categorical: true
+        # importance_score: 5
+        synonyms: ["kode standar", "kode acuan kegiatan"]
+
+      - name: "Standar_Kegiatan"
+        data_type: "varchar(255)"
+        description: "Nama atau deskripsi standar kegiatan."
+        # is_textual: true
+        # importance_score: 6
+        synonyms: ["standar kegiatan", "acuan kegiatan"]
+
+      - name: "Bulan_Pelaksanaan"
+        data_type: "varchar(255)"
+        description: "Bulan kegiatan dilaksanakan (Januari–Desember)."
+        # is_categorical: true
+        # importance_score: 7
+        synonyms: ["bulan pelaksanaan", "periode bulan"]
+
+      - name: "Harga_Satuan"
+        data_type: "varchar(50)"
+        description: "Harga per satuan kegiatan."
+        # is_numeric: true
+        # importance_score: 7
+        synonyms: ["harga satuan", "biaya per unit"]
+
+      - name: "Jumlah_Anggaran"
+        data_type: "decimal(18,2)"
+        description: "Total pagu tahunan kegiatan."
+        # is_numeric: true
+        # importance_score: 10
+        synonyms: ["pagu", "total anggaran", "jumlah anggaran"]
+
+      - name: "Realisasi"
+        data_type: "decimal(18,2)"
+        description: "Total realisasi anggaran kegiatan dalam setahun."
+        # is_numeric: true
+        # importance_score: 10
+        synonyms: ["realisasi tahunan", "anggaran terpakai"]
+
+      - name: "Sisa_Anggaran"
+        data_type: "decimal(18,2)"
+        description: "Selisih antara jumlah anggaran dan realisasi tahunan."
+        # is_numeric: true
+        # importance_score: 9
+        synonyms: ["sisa pagu", "saldo anggaran"]
+
+      - name: "Jumlah_Anggaran_Januari"
+        data_type: "decimal(18,2)"
+        description: "Jumlah anggaran pada bulan Januari."
+        # is_numeric: true
+        # importance_score: 7
+        synonyms: ["anggaran januari"]
+
+      - name: "Realisasi_Januari"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran pada bulan Januari."
+        # is_numeric: true
+        # importance_score: 7
+        synonyms: ["realisasi januari"]
+
+      - name: "Jumlah_Anggaran_Februari"
+        data_type: "decimal(18,2)"
+        description: "Jumlah anggaran bulan Februari."
+        # is_numeric: true
+        # importance_score: 7
+        synonyms: ["anggaran februari"]
+
+      - name: "Realisasi_Februari"
+        data_type: "decimal(18,2)"
+        description: "Realisasi bulan Februari."
+        # is_numeric: true
+        # importance_score: 7
+        synonyms: ["realisasi februari"]

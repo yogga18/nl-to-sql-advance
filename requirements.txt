@@ -1,0 +1,39 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+slowapi
+
+# LLM, RAG, and Vector Store
+langchain
+langchain-community
+langchain-openai
+langchain-google-genai
+langchain-openrouter
+sentence-transformers
+qdrant-client
+langchain-qdrant
+langchain-huggingface
+
+# Database Connector
+SQLAlchemy
+asyncmy
+
+# Env & Config
+python-dotenv
+PyYAML
+
+# Data Manipulation
+pandas
+sqlparse
+
+# Token counting & multi-LLM support
+tiktoken
+google-generativeai
+transformers
+httpx
+openai
+
+# Auth
+PyJWT
+
+greenlet
