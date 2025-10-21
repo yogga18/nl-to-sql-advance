@@ -7,14 +7,18 @@ load_dotenv()
 
 from app.adapters.api import nl2sql_router
 from app.adapters.api.dependencies import limiter
-from app.adapters.db import models
-from app.adapters.db.database import engine
+# from app.adapters.db import models
+# from app.adapters.db.database import engine
 
 # Perintah ini akan membuat semua tabel yang mewarisi dari Base
 # Sekarang aman karena 'config' yang dibutuhkan oleh 'engine' sudah di-load.
 # models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="RAG Service with Clean Architecture")
+app = FastAPI(
+    title="Service ChatBot",
+    description="Service ChatBot dengan pendekatan Retrieval-Augmented Generation (RAG)",
+    version="1.0.0",
+    )
 
 # Handler untuk rate limit
 app.state.limiter = limiter
