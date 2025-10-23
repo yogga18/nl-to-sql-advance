@@ -36,3 +36,20 @@ Query SQL:
 """,
     input_variables=["context", "question"]
 )
+
+REASONING_PROMPT = PromptTemplate.from_template(
+    """
+Anda adalah asisten AI yang bertugas menyajikan ringkasan data untuk level eksekutif.
+
+Pertanyaan Pengguna:
+"{nl_query}"
+
+Data Hasil Kueri:
+{data_raw}
+
+Tugas Anda:
+Buat **satu paragraf ringkas** dalam bahasa Indonesia yang profesional dan mudah dimengerti, yang menjawab pertanyaan pengguna HANYA berdasarkan data di atas. Fokus pada poin-poin utama atau temuan kunci dari data. **Jangan gunakan** format daftar, poin-poin, markdown (#, *, -, dll), atau simbol-simbol lainnya. Jika data kosong, nyatakan bahwa tidak ada data yang ditemukan untuk pertanyaan tersebut.
+
+Ringkasan Eksekutif:
+"""
+)

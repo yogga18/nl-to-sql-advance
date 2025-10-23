@@ -1,7 +1,7 @@
 from ..core.security.sql_validator import sanitize_sql_output, is_safe_select_query
 from ..core.db_executor import execute_select_query
 from ..core.retriever_provider import get_schema_retriever
-from ..core.promts.nl2sql import QUESTION_CLASSIFICATION_PROMT, SQL_PROMPT
+from ..core.promts.nl2sql import QUESTION_CLASSIFICATION_PROMT, SQL_PROMPT, REASONING_PROMPT
 
 # Impor untuk interaksi async dan tipe data
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,9 @@ from ..adapters.llm.llm_factory import get_llm_adapter
 from ..adapters.db import crud, schemas
 from fastapi import BackgroundTasks
 from datetime import datetime
+
+from ..adapters.vector_store.qdrant_adapter import add_message_vector # Impor fungsi Qdrant
+from ..core.embedding_provider import get_embedding_model
 
 class NL2SQLService:
     """
@@ -75,6 +78,89 @@ class NL2SQLService:
         except Exception as e:
             raise RuntimeError(f"Gagal mengeksekusi SQL: {e}")
         
+    # async def execute_flow(
+    #     self,
+    #     nl_query: str,
+    #     model_name: str,
+    #     nip: str,
+    #     kode_unit: str,
+    #     display_name: str,
+    #     room_id: int,
+    #     endpoint_path: str,
+    #     db_session: AsyncSession,
+    #     background_tasks: BackgroundTasks,
+    # ) -> Dict[str, Any]:
+    #     """
+    #     Generate Query, Get Data, Reasoning, dan log latency per langkah.
+    #     """
+
+    #     start_flow_time = datetime.now()
+    #     overall_latencies = {} # Dictionary untuk menyimpan semua latency
+
+    #     llm = get_llm_adapter(model_name=model_name)
+
+    #     # Simpan pesan user (dapatkan ID)
+    #     user_message_schema = schemas.ChatMessageCreate(
+    #         room_id=room_id, sender='user', message_text=nl_query
+    #     )
+    #     saved_user_message = await crud.create_chat_message(db_session, user_message_schema)
+    #     user_msg_id = cast(int, saved_user_message.message_id)
+
+    #     # === LANGKAH 1 & 2: KLASIFIKASI & VALIDASI ===
+    #     validation_prompt = QUESTION_CLASSIFICATION_PROMT.format(nl_query=nl_query) # Pastikan nama prompt benar
+    #     validation_response, classification_latency = await self._measure_time(llm.ainvoke, validation_prompt)
+    #     overall_latencies['classification'] = classification_latency
+    #     print(f"--- Classification Latency: {classification_latency} ms ---")
+    #     if "data_perusahaan" not in validation_response.content.lower():
+    #         raise ValueError("Pertanyaan tidak relevan dengan data perusahaan.")
+
+    #     # Panggil helper untuk RAG, SQL Gen, Eksekusi (sudah diukur di dalamnya)
+    #     sanitized_sql, data_raw, dynamic_context, sql_latencies = await self._generate_and_execute_sql(nl_query, llm)
+    #     overall_latencies.update(sql_latencies) # Gabungkan latency dari helper
+
+    #     # === LANGKAH 8: REASONING ===
+    #     reasoning = "Kueri berhasil dieksekusi tetapi tidak menghasilkan data."
+    #     reasoning_latency = 0
+    #     if data_raw:
+    #         reasoning_prompt = f"..." # Prompt reasoning Anda
+    #         reasoning_response, reasoning_latency = await self._measure_time(llm.ainvoke, reasoning_prompt)
+    #         reasoning = reasoning_response.content
+    #         print(f"--- Reasoning Latency: {reasoning_latency} ms ---")
+    #     overall_latencies['reasoning'] = reasoning_latency
+
+    #     # === PERSIAPAN LOG (Sekarang menyertakan latency per langkah) ===
+    #     end_flow_time = datetime.now()
+    #     total_latency = int((end_flow_time - start_flow_time).total_seconds() * 1000)
+    #     provider = "Gemini" if "Google/gemini-2.5-flash" in model_name.lower() else model_name
+
+    #     llm_run_schema = schemas.LLMRunCreate(
+    #         user_message_id=user_msg_id,
+    #         generated_sql=sanitized_sql,
+    #         retrieved_context_knowledge=dynamic_context,
+    #         llm_model_used=model_name,
+    #         llm_provider_user=provider,
+    #         latency_total_ms=total_latency,
+    #         is_success=True,
+    #         endpoint_path=endpoint_path,
+    #         # Latency
+    #         latency_classification_ms=overall_latencies.get('classification'),
+    #         latency_rag_ms=overall_latencies.get('rag'),
+    #         latency_sql_generation_ms=overall_latencies.get('sql_generation'),
+    #         latency_sql_execution_ms=overall_latencies.get('sql_execution'),
+    #         latency_reasoning_ms=overall_latencies.get('reasoning'),
+    #     )
+
+    #     ai_message_schema = schemas.ChatMessageCreate(
+    #         room_id=room_id, sender='ai', message_text=reasoning, in_reply_to_message_id=user_msg_id
+    #     )
+
+    #     # === BACKGROUND TASK ===
+    #     background_tasks.add_task(crud.create_llm_run, db_session, llm_run_schema)
+    #     background_tasks.add_task(crud.create_chat_message, db_session, ai_message_schema)
+
+    #     # === KEMBALIKAN HASIL ===
+    #     return {"query": sanitized_sql, "data_raw": data_raw, "reasoning": reasoning}
+
     async def execute_flow(
         self,
         nl_query: str,
@@ -88,15 +174,16 @@ class NL2SQLService:
         background_tasks: BackgroundTasks,
     ) -> Dict[str, Any]:
         """
-        Generate Query, Get Data, Reasoning, dan log latency per langkah.
+        Generate Query, Get Data, Reasoning, dan log ke DB & Qdrant di background.
         """
-
         start_flow_time = datetime.now()
-        overall_latencies = {} # Dictionary untuk menyimpan semua latency
+        overall_latencies = {}
+        # username = user_info.get("username", "unknown")
+        # print(f"Executing NL2SQL Flow for user: {username}")
 
         llm = get_llm_adapter(model_name=model_name)
 
-        # Simpan pesan user (dapatkan ID)
+        # === Simpan Pesan User (Foreground - dapatkan ID dan objek tersimpan) ===
         user_message_schema = schemas.ChatMessageCreate(
             room_id=room_id, sender='user', message_text=nl_query
         )
@@ -104,26 +191,35 @@ class NL2SQLService:
         user_msg_id = cast(int, saved_user_message.message_id)
 
         # === LANGKAH 1 & 2: KLASIFIKASI & VALIDASI ===
-        validation_prompt = QUESTION_CLASSIFICATION_PROMT.format(nl_query=nl_query) # Pastikan nama prompt benar
-        validation_response, classification_latency = await self._measure_time(llm.ainvoke, validation_prompt)
+        # ... (Kode klasifikasi tetap sama) ...
+        validation_response, classification_latency = await self._measure_time(llm.ainvoke, QUESTION_CLASSIFICATION_PROMT.format(nl_query=nl_query)) # Pastikan nama prompt benar
         overall_latencies['classification'] = classification_latency
-        print(f"--- Classification Latency: {classification_latency} ms ---")
         if "data_perusahaan" not in validation_response.content.lower():
             raise ValueError("Pertanyaan tidak relevan dengan data perusahaan.")
 
-        # Panggil helper untuk RAG, SQL Gen, Eksekusi (sudah diukur di dalamnya)
+        # === LANGKAH 3-7: RAG, SQL GEN, VALIDASI, EKSEKUSI ===
         sanitized_sql, data_raw, dynamic_context, sql_latencies = await self._generate_and_execute_sql(nl_query, llm)
-        overall_latencies.update(sql_latencies) # Gabungkan latency dari helper
+        overall_latencies.update(sql_latencies)
 
         # === LANGKAH 8: REASONING ===
         reasoning = "Kueri berhasil dieksekusi tetapi tidak menghasilkan data."
         reasoning_latency = 0
         if data_raw:
-            reasoning_prompt = f"..." # Prompt reasoning Anda
-            reasoning_response, reasoning_latency = await self._measure_time(llm.ainvoke, reasoning_prompt)
-            reasoning = reasoning_response.content
-            print(f"--- Reasoning Latency: {reasoning_latency} ms ---")
+             # ✅ Gunakan PromptTemplate yang baru
+             reasoning_prompt_formatted = REASONING_PROMPT.format(
+                 nl_query=nl_query,
+                 data_raw=str(data_raw)[:2500] # Tetap potong data jika perlu
+             )
+             reasoning_response, reasoning_latency = await self._measure_time(llm.ainvoke, reasoning_prompt_formatted)
+             reasoning = reasoning_response.content
         overall_latencies['reasoning'] = reasoning_latency
+
+        # === Simpan Jawaban AI (Foreground - agar dapat objek untuk Qdrant) ===
+        ai_message_schema = schemas.ChatMessageCreate(
+            room_id=room_id, sender='ai', message_text=reasoning, in_reply_to_message_id=user_msg_id
+        )
+        # Simpan ke MySQL dan dapatkan objek yang sudah disimpan
+        saved_ai_message = await crud.create_chat_message(db_session, ai_message_schema)
 
         # === PERSIAPAN LOG (Sekarang menyertakan latency per langkah) ===
         end_flow_time = datetime.now()
@@ -131,29 +227,33 @@ class NL2SQLService:
         provider = "Gemini" if "Google/gemini-2.5-flash" in model_name.lower() else model_name
 
         llm_run_schema = schemas.LLMRunCreate(
-            user_message_id=user_msg_id,
-            generated_sql=sanitized_sql,
-            retrieved_context_knowledge=dynamic_context,
-            llm_model_used=model_name,
-            llm_provider_user=provider,
-            latency_total_ms=total_latency,
-            is_success=True,
-            endpoint_path=endpoint_path,
-            # Latency
+            user_message_id=user_msg_id, generated_sql=sanitized_sql,
+            retrieved_context_knowledge=dynamic_context, llm_model_used=model_name,
+            llm_provider_user=provider, latency_total_ms=total_latency,
+            endpoint_path=endpoint_path, # Simpan endpoint path
             latency_classification_ms=overall_latencies.get('classification'),
             latency_rag_ms=overall_latencies.get('rag'),
             latency_sql_generation_ms=overall_latencies.get('sql_generation'),
             latency_sql_execution_ms=overall_latencies.get('sql_execution'),
-            latency_reasoning_ms=overall_latencies.get('reasoning'),
+            latency_reasoning_ms=overall_latencies.get('reasoning'), is_success=True
         )
 
-        ai_message_schema = schemas.ChatMessageCreate(
-            room_id=room_id, sender='ai', message_text=reasoning, in_reply_to_message_id=user_msg_id
-        )
+        # Dapatkan embedding model sekali untuk background tasks
+        shared_embeddings = get_embedding_model()
+
+        # Konversi model SQLAlchemy ke skema Pydantic untuk fungsi Qdrant
+        user_msg_read_schema = schemas.ChatMessageRead.from_orm(saved_user_message)
+        ai_msg_read_schema = schemas.ChatMessageRead.from_orm(saved_ai_message)
 
         # === BACKGROUND TASK ===
+        print("Adding logging and vector storage tasks to background...")
+        # Task untuk menyimpan log LLM Run (MySQL)
         background_tasks.add_task(crud.create_llm_run, db_session, llm_run_schema)
-        background_tasks.add_task(crud.create_chat_message, db_session, ai_message_schema)
+
+        # ✅ BARU: Task untuk menyimpan vektor pesan user (Qdrant)
+        background_tasks.add_task(add_message_vector, user_msg_read_schema, shared_embeddings)
+        # ✅ BARU: Task untuk menyimpan vektor jawaban AI (Qdrant)
+        background_tasks.add_task(add_message_vector, ai_msg_read_schema, shared_embeddings)
 
         # === KEMBALIKAN HASIL ===
         return {"query": sanitized_sql, "data_raw": data_raw, "reasoning": reasoning}

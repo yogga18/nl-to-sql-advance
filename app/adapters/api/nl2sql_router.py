@@ -34,10 +34,10 @@ async def handle_nl_query(
         result = await nl2sql_service.execute_flow(
             nl_query=request_body.prompt,
             model_name=request_body.model,
+            room_id=request_body.room_id,
             nip=request_body.nip,
             kode_unit=request_body.kode_unit,
             display_name=request_body.display_name,
-            room_id=request_body.room_id,
             endpoint_path=str(request.url.path),
             db_session=db,
             background_tasks=BackgroundTasks,

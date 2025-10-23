@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
 from datetime import datetime
 
 class ChatMessageBase(BaseModel):
@@ -15,8 +15,9 @@ class ChatMessageRead(ChatMessageBase):
     message_id: int
     timestamp: datetime
     in_reply_to_message_id: Optional[int] = None
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LLMRunCreate(BaseModel):
     user_message_id: int
@@ -38,5 +39,6 @@ class LLMRunCreate(BaseModel):
 class LLMRunRead(LLMRunCreate):
     run_id: int
     timestamp: datetime
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
