@@ -1,5 +1,5 @@
-from qdrant_client import QdrantClient, models, AsyncQdrantClient
-from langchain_qdrant import Qdrant, QdrantVectorStore
+from qdrant_client import models, AsyncQdrantClient
+from langchain_qdrant import QdrantVectorStore
 from langchain_core.embeddings import Embeddings
 import uuid
 from app.adapters.db import schemas
@@ -12,25 +12,6 @@ def get_qdrant_retriever(
     collection_name: str,
     embeddings: Embeddings
 ):
-    # client = QdrantClient(
-    #     host=qdrant_host,
-    #     # api_key=qdrant_api_key,
-    #     prefer_grpc=False
-    # )
-
-    # vector_store = Qdrant(
-    #     client=client,
-    #     collection_name=collection_name,
-    #     embeddings=embeddings
-    # )
-
-    # return vector_store.as_retriever()
-
-    # vector_store = QdrantVectorStore.from_existing_collection(
-    #      client=client,
-    #      collection_name=collection_name,
-    #      embedding=embeddings
-    #  )
     vector_store = QdrantVectorStore.from_existing_collection(
          embedding=embeddings,
          collection_name=collection_name,

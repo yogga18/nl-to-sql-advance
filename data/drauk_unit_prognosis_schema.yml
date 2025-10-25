@@ -3,163 +3,279 @@ spec:
     description: >
       Tabel ini berisi data prognosis (perkiraan dan realisasi) anggaran tahunan untuk setiap unit kerja di universitas.
       Data mencakup rincian kegiatan, akun, COA, serta distribusi anggaran dan realisasi per bulan selama satu tahun fiskal.
-      Tabel ini digunakan untuk analisis perbandingan antara rencana dan realisasi anggaran bulanan setiap unit.
+      Tabel ini digunakan untuk analisis perbandingan antara rencana dan realisasi anggaran bulanan serta tahunan setiap unit. # Disesuaikan sedikit
 
     business_rules:
-      - "Kolom `Jumlah_Anggaran` merepresentasikan total pagu tahunan per kegiatan."
+      - "Kolom `Jumlah_Anggaran` merepresentasikan total pagu tahunan per kegiatan/akun."
       - "Kolom `Realisasi` adalah total realisasi anggaran tahunan."
-      - "Kolom `Sisa_Anggaran` = `Jumlah_Anggaran` - `Realisasi`."
-      - "Kolom `Jumlah_Anggaran_<Bulan>` dan `Realisasi_<Bulan>` menunjukkan distribusi dan realisasi bulanan."
+      - "Kolom `Sisa_Anggaran` adalah selisih tahunan (`Jumlah_Anggaran` - `Realisasi`)."
+      - "Kolom `Jumlah_Anggaran_<Bulan>` dan `Realisasi_<Bulan>` menunjukkan rencana dan realisasi anggaran bulanan."
       - "Gunakan kolom `Tahun_Anggaran` untuk filter waktu dan analisis per tahun."
-      - "Kolom `Nama_Unit` dan `Program_Strategis` dapat digunakan untuk agregasi per unit atau program."
+      - "Gunakan `Nama_Unit` untuk agregasi per unit."
+      - "Untuk melihat tren bulanan, ambil kolom `Realisasi_<Bulan>`."
 
     common_questions:
       - question: "Berapa total realisasi anggaran tahun ini?"
         sql_logic: "Gunakan SUM(Realisasi) dengan filter Tahun_Anggaran."
-      - question: "Unit mana yang memiliki selisih (sisa anggaran) paling besar?"
+      - question: "Unit mana yang memiliki sisa anggaran paling besar?"
         sql_logic: "Gunakan SUM(Sisa_Anggaran) GROUP BY Nama_Unit ORDER BY SUM(Sisa_Anggaran) DESC."
       - question: "Bandingkan jumlah anggaran dan realisasi bulan Maret."
         sql_logic: "Gunakan SUM(Jumlah_Anggaran_Maret) dan SUM(Realisasi_Maret)."
       - question: "Bagaimana tren realisasi bulanan untuk Unit X?"
-        sql_logic: "Ambil kolom Realisasi_Januari...Realisasi_Desember untuk unit tersebut dan tampilkan dalam urutan bulan."
+        sql_logic: "Ambil kolom Realisasi_Januari...Realisasi_Desember untuk unit tersebut."
 
     columns:
       - name: "Tahun_Anggaran"
         data_type: "int(11)"
-        description: "Tahun fiskal atau periode anggaran berjalan."
-        # is_numeric: true
-        # importance_score: 9
+        description: "Tahun fiskal atau periode anggaran berjalan. Gunakan untuk filter tahun. Tipe: Angka."
         synonyms: ["tahun", "periode", "tahun anggaran"]
 
       - name: "Kode_DRAUK"
         data_type: "bigint(20)"
-        description: "Kode unik dokumen DRAUK untuk identifikasi kegiatan."
-        # is_numeric: true
-        # importance_score: 8
+        description: "Kode unik dokumen DRAUK untuk identifikasi."
         synonyms: ["kode drauk", "id drauk"]
 
       - name: "Kode_Unit"
         data_type: "varchar(20)"
         description: "Kode unit kerja pelaksana kegiatan."
-        # is_categorical: true
-        # importance_score: 9
         synonyms: ["kode unit kerja", "id unit"]
 
       - name: "Nama_Unit"
         data_type: "varchar(255)"
-        description: "Nama lengkap unit kerja pelaksana kegiatan."
-        # is_textual: true
-        # importance_score: 10
+        description: "Nama lengkap unit kerja pelaksana. Gunakan untuk filter atau GROUP BY per unit. Tipe: Teks."
         synonyms: ["unit", "nama unit kerja", "unit pelaksana"]
 
       - name: "Tipe_Unit"
         data_type: "varchar(50)"
-        description: "Jenis unit seperti fakultas, biro, lembaga, atau pusat studi."
-        # is_categorical: true
-        # importance_score: 6
+        description: "Jenis unit seperti fakultas, biro, lembaga."
         synonyms: ["tipe unit", "jenis unit"]
 
       - name: "Kategori_Unit"
         data_type: "varchar(50)"
         description: "Kategori pengelompokan unit kerja."
-        # is_categorical: true
-        # importance_score: 6
         synonyms: ["kategori unit", "kelompok unit"]
 
       - name: "Kegiatan_Universitas"
         data_type: "text"
         description: "Nama kegiatan utama tingkat universitas."
-        # is_textual: true
-        # importance_score: 7
         synonyms: ["kegiatan universitas", "agenda universitas"]
-
-      - name: "Kegiatan_Unit"
-        data_type: "text"
-        description: "Nama kegiatan yang dilakukan oleh unit kerja."
-        # is_textual: true
-        # importance_score: 8
-        synonyms: ["aktivitas unit", "kegiatan unit"]
 
       - name: "Indikator_Capaian"
         data_type: "text"
         description: "Indikator capaian dari kegiatan unit kerja."
-        # is_textual: true
-        # importance_score: 7
         synonyms: ["indikator capaian", "indikator output"]
+
+      - name: "Kegiatan_Unit"
+        data_type: "text"
+        description: "Nama kegiatan spesifik yang dilakukan oleh unit kerja."
+        synonyms: ["aktivitas unit", "kegiatan unit"]
 
       - name: "Kode_Standar_Kegiatan"
         data_type: "varchar(50)"
         description: "Kode standar acuan untuk kegiatan."
-        # is_categorical: true
-        # importance_score: 5
         synonyms: ["kode standar", "kode acuan kegiatan"]
 
       - name: "Standar_Kegiatan"
         data_type: "varchar(255)"
         description: "Nama atau deskripsi standar kegiatan."
-        # is_textual: true
-        # importance_score: 6
         synonyms: ["standar kegiatan", "acuan kegiatan"]
 
       - name: "Bulan_Pelaksanaan"
         data_type: "varchar(255)"
-        description: "Bulan kegiatan dilaksanakan (Januari–Desember)."
-        # is_categorical: true
-        # importance_score: 7
+        description: "Bulan kegiatan dilaksanakan (biasanya rentang, misal Januari–Desember)."
         synonyms: ["bulan pelaksanaan", "periode bulan"]
+
+      - name: "FTE"
+        data_type: "varchar(50)"
+        description: "Full-Time Equivalent, ukuran beban kerja SDM."
+        synonyms: ["beban kerja", "keterlibatan sdm", "fte"]
+
+      - name: "Detail_Kegiatan"
+        data_type: "text"
+        description: "Penjelasan rinci mengenai kegiatan."
+        synonyms: ["rincian kegiatan", "deskripsi detail"]
+
+      - name: "Kelompok_Pagu"
+        data_type: "varchar(50)"
+        description: "Klasifikasi jenis anggaran (Belanja Pegawai, Modal, dll.)."
+        synonyms: ["jenis pagu", "kategori anggaran", "kelompok biaya"]
+
+      - name: "Akun"
+        data_type: "varchar(50)"
+        description: "Kode akun spesifik."
+        synonyms: ["kode akun"]
+
+      - name: "COA"
+        data_type: "varchar(50)"
+        description: "Kode Chart of Accounts."
+        synonyms: ["kode coa", "chart of account"]
+
+      - name: "Nama_COA"
+        data_type: "varchar(255)"
+        description: "Nama akun sesuai Chart of Accounts."
+        synonyms: ["nama akun", "nama rekening"]
+
+      - name: "Satuan_Kegiatan"
+        data_type: "varchar(50)"
+        description: "Unit pengukuran kegiatan (Dokumen, Acara, dll.)."
+        synonyms: ["unit kegiatan"]
+
+      - name: "Barjas"
+        data_type: "varchar(50)"
+        description: "Jenis pengadaan Barang dan Jasa."
+        synonyms: ["barang jasa", "pengadaan"]
+
+      - name: "Volume_1"
+        data_type: "varchar(50)"
+        description: "Kuantitas dimensi pertama (sebagai teks)."
+        synonyms: ["jumlah 1", "kuantitas 1", "volume 1"]
+      - name: "Satuan_1"
+        data_type: "varchar(50)"
+        description: "Satuan untuk Volume 1."
+        synonyms: ["unit 1", "satuan 1"]
+      - name: "Volume_2"
+        data_type: "varchar(50)"
+        description: "Kuantitas dimensi kedua (sebagai teks)."
+        synonyms: ["jumlah 2", "kuantitas 2", "volume 2"]
+      - name: "Satuan_2"
+        data_type: "varchar(50)"
+        description: "Satuan untuk Volume 2."
+        synonyms: ["unit 2", "satuan 2"]
+      - name: "Volume_3"
+        data_type: "varchar(50)"
+        description: "Kuantitas dimensi ketiga (sebagai teks)."
+        synonyms: ["jumlah 3", "kuantitas 3", "volume 3"]
+      - name: "Satuan_3"
+        data_type: "varchar(50)"
+        description: "Satuan untuk Volume 3."
+        synonyms: ["unit 3", "satuan 3"]
+      - name: "Volume_4"
+        data_type: "varchar(50)"
+        description: "Kuantitas dimensi keempat (sebagai teks)."
+        synonyms: ["jumlah 4", "kuantitas 4", "volume 4"]
+      - name: "Satuan_4"
+        data_type: "varchar(50)"
+        description: "Satuan untuk Volume 4."
+        synonyms: ["unit 4", "satuan 4"]
 
       - name: "Harga_Satuan"
         data_type: "varchar(50)"
-        description: "Harga per satuan kegiatan."
-        # is_numeric: true
-        # importance_score: 7
-        synonyms: ["harga satuan", "biaya per unit"]
+        description: "Harga per satuan kegiatan (disimpan sebagai teks)."
+        synonyms: ["harga satuan", "biaya per unit", "unit price"]
+
+      - name: "Sumber_Dana"
+        data_type: "varchar(100)"
+        description: "Asal dana kegiatan (DIPA, Dana Masyarakat, dll.)."
+        synonyms: ["asal dana", "sumber anggaran", "funding source"]
 
       - name: "Jumlah_Anggaran"
         data_type: "decimal(18,2)"
-        description: "Total pagu tahunan kegiatan."
-        # is_numeric: true
-        # importance_score: 10
-        synonyms: ["pagu", "total anggaran", "jumlah anggaran"]
+        description: "Total pagu tahunan kegiatan per akun. Gunakan untuk 'total anggaran', 'pagu'. Tipe: Angka desimal."
+        synonyms: ["pagu", "total anggaran", "jumlah anggaran", "budget"]
 
       - name: "Realisasi"
         data_type: "decimal(18,2)"
-        description: "Total realisasi anggaran kegiatan dalam setahun."
-        # is_numeric: true
-        # importance_score: 10
-        synonyms: ["realisasi tahunan", "anggaran terpakai"]
+        description: "Total realisasi tahunan per akun. Gunakan untuk 'dana terpakai', 'penyerapan'. Tipe: Angka desimal."
+        synonyms: ["realisasi tahunan", "anggaran terpakai", "penyerapan"]
 
       - name: "Sisa_Anggaran"
         data_type: "decimal(18,2)"
-        description: "Selisih antara jumlah anggaran dan realisasi tahunan."
-        # is_numeric: true
-        # importance_score: 9
-        synonyms: ["sisa pagu", "saldo anggaran"]
+        description: "Sisa anggaran tahunan per akun (Jumlah_Anggaran - Realisasi). Gunakan untuk 'saldo', 'sisa'. Tipe: Angka desimal."
+        synonyms: ["sisa pagu", "saldo anggaran", "sisa"]
 
       - name: "Jumlah_Anggaran_Januari"
         data_type: "decimal(18,2)"
-        description: "Jumlah anggaran pada bulan Januari."
-        # is_numeric: true
-        # importance_score: 7
-        synonyms: ["anggaran januari"]
-
+        description: "Rencana anggaran bulan Januari. Tipe: Angka desimal."
+        synonyms: ["anggaran januari", "pagu januari"]
       - name: "Realisasi_Januari"
         data_type: "decimal(18,2)"
-        description: "Realisasi anggaran pada bulan Januari."
-        # is_numeric: true
-        # importance_score: 7
-        synonyms: ["realisasi januari"]
-
+        description: "Realisasi anggaran bulan Januari. Tipe: Angka desimal."
+        synonyms: ["realisasi januari", "penyerapan januari"]
       - name: "Jumlah_Anggaran_Februari"
         data_type: "decimal(18,2)"
-        description: "Jumlah anggaran bulan Februari."
-        # is_numeric: true
-        # importance_score: 7
-        synonyms: ["anggaran februari"]
-
+        description: "Rencana anggaran bulan Februari. Tipe: Angka desimal."
+        synonyms: ["anggaran februari", "pagu februari"]
       - name: "Realisasi_Februari"
         data_type: "decimal(18,2)"
-        description: "Realisasi bulan Februari."
-        # is_numeric: true
-        # importance_score: 7
-        synonyms: ["realisasi februari"]
+        description: "Realisasi anggaran bulan Februari. Tipe: Angka desimal."
+        synonyms: ["realisasi februari", "penyerapan februari"]
+      - name: "Jumlah_Anggaran_Maret"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan Maret. Tipe: Angka desimal."
+        synonyms: ["anggaran maret", "pagu maret"]
+      - name: "Realisasi_Maret"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan Maret. Tipe: Angka desimal."
+        synonyms: ["realisasi maret", "penyerapan maret"]
+      - name: "Jumlah_Anggaran_April"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan April. Tipe: Angka desimal."
+        synonyms: ["anggaran april", "pagu april"]
+      - name: "Realisasi_April"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan April. Tipe: Angka desimal."
+        synonyms: ["realisasi april", "penyerapan april"]
+      - name: "Jumlah_Anggaran_Mei"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan Mei. Tipe: Angka desimal."
+        synonyms: ["anggaran mei", "pagu mei"]
+      - name: "Realisasi_Mei"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan Mei. Tipe: Angka desimal."
+        synonyms: ["realisasi mei", "penyerapan mei"]
+      - name: "Jumlah_Anggaran_Juni"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan Juni. Tipe: Angka desimal."
+        synonyms: ["anggaran juni", "pagu juni"]
+      - name: "Realisasi_Juni"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan Juni. Tipe: Angka desimal."
+        synonyms: ["realisasi juni", "penyerapan juni"]
+      - name: "Jumlah_Anggaran_Juli"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan Juli. Tipe: Angka desimal."
+        synonyms: ["anggaran juli", "pagu juli"]
+      - name: "Realisasi_Juli"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan Juli. Tipe: Angka desimal."
+        synonyms: ["realisasi juli", "penyerapan juli"]
+      - name: "Jumlah_Anggaran_Agustus"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan Agustus. Tipe: Angka desimal."
+        synonyms: ["anggaran agustus", "pagu agustus"]
+      - name: "Realisasi_Agustus"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan Agustus. Tipe: Angka desimal."
+        synonyms: ["realisasi agustus", "penyerapan agustus"]
+      - name: "Jumlah_Anggaran_September"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan September. Tipe: Angka desimal."
+        synonyms: ["anggaran september", "pagu september"]
+      - name: "Realisasi_September"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan September. Tipe: Angka desimal."
+        synonyms: ["realisasi september", "penyerapan september"]
+      - name: "Jumlah_Anggaran_Oktober"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan Oktober. Tipe: Angka desimal."
+        synonyms: ["anggaran oktober", "pagu oktober"]
+      - name: "Realisasi_Oktober"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan Oktober. Tipe: Angka desimal."
+        synonyms: ["realisasi oktober", "penyerapan oktober"]
+      - name: "Jumlah_Anggaran_November"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan November. Tipe: Angka desimal."
+        synonyms: ["anggaran november", "pagu november"]
+      - name: "Realisasi_November"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan November. Tipe: Angka desimal."
+        synonyms: ["realisasi november", "penyerapan november"]
+      - name: "Jumlah_Anggaran_Desember"
+        data_type: "decimal(18,2)"
+        description: "Rencana anggaran bulan Desember. Tipe: Angka desimal."
+        synonyms: ["anggaran desember", "pagu desember"]
+      - name: "Realisasi_Desember"
+        data_type: "decimal(18,2)"
+        description: "Realisasi anggaran bulan Desember. Tipe: Angka desimal."
+        synonyms: ["realisasi desember", "penyerapan desember"]

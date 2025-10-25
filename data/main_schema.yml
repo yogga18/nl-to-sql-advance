@@ -44,7 +44,7 @@ tables:
     importance_score: 0.9
 
 routing_rules:
-  - condition: "pertanyaan mengandung 'pprognosis' atau 'rencana target' atau 'bulan' atau 'deviasi' atau 'realisasi bulan' atau 'kumulatif'"
+  - condition: "pertanyaan mengandung 'prognosis' atau 'rencana target' atau 'bulan' atau 'deviasi' atau 'realisasi bulan' atau 'kumulatif'"
     route_to: drauk_unit_prognosis
 
   - condition: "pertanyaan mengandung 'program strategis' atau 'indikator kinerja program strategis' atau 'sasaran strategis' atau indikator sasaran strategis' atau 'target' atau 'capaian'"

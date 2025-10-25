@@ -1,86 +1,40 @@
 spec:
   drauk_unit:
-    description: "Tabel ini berisi data Rencana Kegiatan dan Anggaran Tahunan (RKAT) yang sangat detail. Data mencakup hierarki dari sasaran strategis, program, kegiatan, hingga rincian anggaran per akun untuk setiap unit kerja."
+    description: "Tabel ini berisi data Rencana Kegiatan dan Anggaran Tahunan (RKAT) detail per unit kerja, mencakup rincian anggaran per akun, volume, satuan, sumber dana, jumlah, realisasi, dan sisa." # Deskripsi disesuaikan
     
     business_rules:
       - "Kolom `Jumlah` adalah metrik finansial utama untuk total anggaran atau pagu."
-      - "Kolom `Sisa` adalah hasil perhitungan dari (`Jumlah` - `Realisasi`)."
+      - "Kolom `Sisa` secara konseptual adalah (`Jumlah` - `Realisasi`), meskipun tidak dihitung otomatis di DB." # Klarifikasi
       - "Untuk mengurutkan berdasarkan nilai 'terbesar' atau 'terkecil', gunakan kolom numerik seperti `Jumlah`, `Realisasi`, atau `Sisa`."
       - "Untuk filter waktu atau periode, gunakan kolom `Tahun_Anggaran`."
-      - "Hierarki data adalah: `Sasaran_Strategis` -> `Program_Strategis` -> `Kegiatan_Unit`."
 
     common_questions:
       - question: "Berapa total pagu anggaran?"
         sql_logic: "Ini harus menggunakan SUM(Jumlah)."
       - question: "Unit mana yang anggarannya paling besar?"
         sql_logic: "Ini membutuhkan pengelompokan berdasarkan Nama_Unit dan pengurutan dengan ORDER BY SUM(Jumlah) DESC."
-      - question: "Bandingkan realisasi dan sisa anggaran untuk program X."
-        sql_logic: "Ini membutuhkan `SELECT SUM(Realisasi), SUM(Sisa) WHERE Program_Strategis = 'X'`."
+      - question: "Bandingkan realisasi dan sisa anggaran untuk kegiatan X." # Disesuaikan contohnya
+        sql_logic: "Ini membutuhkan `SELECT SUM(Realisasi), SUM(Sisa) WHERE Kegiatan_Unit = 'X'`."
 
     columns:
       - name: "Tahun_Anggaran"
-        data_type: "int(11)"
-        description: "Tahun fiskal atau periode anggaran. Gunakan kolom ini untuk filter berdasarkan periode waktu seperti 'tahun 2024', 'selama 2023', dll."
+        data_type: "int(11)" 
+        description: "Tahun fiskal atau periode anggaran. Gunakan kolom ini untuk filter berdasarkan periode waktu seperti 'tahun 2024'. Tipe data: Angka." # Ditambah penegasan tipe
         synonyms: ["tahun", "periode", "waktu anggaran"]
 
       - name: "Kode_DRAUK"
-        data_type: "int(11)"
+        data_type: "bigint(20)"
         description: "Kode unik internal untuk Dokumen Rencana Anggaran Unit Kerja (DRAUK)."
         synonyms: ["kode dokumen", "ID DRAUK"]
 
-      - name: "Indikator_Tujuan"
-        data_type: "varchar(255)"
-        description: "Indikator atau penanda untuk tujuan strategis utama."
-        synonyms: ["penanda tujuan"]
-
-      - name: "Kode_SS"
-        data_type: "varchar(50)"
-        description: "Kode untuk Sasaran Strategis."
-        synonyms: ["kode sasaran", "ID SS"]
-
-      - name: "Sasaran_Strategis"
-        data_type: "varchar(255)"
-        description: "Tujuan utama jangka panjang yang ingin dicapai oleh organisasi."
-        synonyms: ["tujuan", "goal", "objective", "sasaran", "strategi"]
-
-      - name: "Kode_IKSS"
-        data_type: "varchar(50)"
-        description: "Kode untuk Indikator Kinerja Sasaran Strategis."
-        synonyms: ["kode KPI", "kode metrik"]
-
-      - name: "Indikator_Kinerja_Sasaran_Strategis"
-        data_type: "text"
-        description: "Metrik atau ukuran yang digunakan untuk menilai pencapaian Sasaran Strategis."
-        synonyms: ["IKSS", "KPI", "metrik kinerja sasaran"]
-
-      - name: "Kode_PS"
-        data_type: "varchar(50)"
-        description: "Kode untuk Program Strategis."
-        synonyms: ["kode program"]
-
-      - name: "Program_Strategis"
-        data_type: "text"
-        description: "Sekumpulan kegiatan atau inisiatif utama yang dirancang untuk mencapai Sasaran Strategis."
-        synonyms: ["program", "inisiatif"]
-
-      - name: "Kode_IKPS"
-        data_type: "varchar(50)"
-        description: "Kode untuk Indikator Kinerja Program Strategis."
-        synonyms: ["kode KPI program"]
-
-      - name: "Indikator_Kinerja_Program_Strategis"
-        data_type: "text"
-        description: "Metrik atau ukuran yang digunakan untuk menilai keberhasilan sebuah Program Strategis."
-        synonyms: ["IKPS", "KPI Program", "metrik program"]
-
       - name: "Kode_Unit"
-        data_type: "varchar(50)"
+        data_type: "varchar(20)"
         description: "Kode unik untuk unit kerja atau departemen."
         synonyms: ["ID unit", "kode departemen"]
 
       - name: "Nama_Unit"
         data_type: "varchar(255)"
-        description: "Nama resmi dari unit kerja, departemen, atau fakultas yang bertanggung jawab. Gunakan untuk mengelompokkan data (`GROUP BY`) per unit."
+        description: "Nama resmi dari unit kerja, departemen, atau fakultas yang bertanggung jawab. Gunakan untuk mengelompokkan data (`GROUP BY`) atau filter per unit. Tipe data: Teks." # Ditambah penegasan tipe
         synonyms: ["unit kerja", "departemen", "fakultas", "penanggung jawab", "unit"]
 
       - name: "Tipe_Unit"
@@ -100,7 +54,7 @@ spec:
 
       - name: "Kegiatan_Unit"
         data_type: "text"
-        description: "Deskripsi kegiatan spesifik yang dilakukan oleh unit kerja."
+        description: "Deskripsi kegiatan spesifik yang dilakukan oleh unit kerja. Bisa digunakan untuk filter kegiatan." # Ditambah info filter
         synonyms: ["aktivitas unit", "tugas unit"]
 
       - name: "Kode_Standar_Kegiatan"
@@ -109,7 +63,7 @@ spec:
         synonyms: ["kode standar"]
 
       - name: "Standar_Kegiatan"
-        data_type: "varchar(255)"
+        data_type: "text" # Diperbaiki dari varchar(255)
         description: "Nama atau deskripsi standar kegiatan."
         synonyms: ["nama standar"]
 
@@ -124,7 +78,7 @@ spec:
         synonyms: ["rincian kegiatan", "deskripsi detail"]
 
       - name: "Kelompok_Pagu"
-        data_type: "varchar(100)"
+        data_type: "varchar(50)"
         description: "Klasifikasi atau kategori jenis anggaran (contoh: Belanja Pegawai, Belanja Modal)."
         synonyms: ["jenis pagu", "kategori anggaran", "kelompok biaya"]
 
@@ -139,7 +93,7 @@ spec:
         synonyms: ["kode coa", "chart of account"]
 
       - name: "Nama_COA"
-        data_yype: "varchar(255)"
+        data_type: "text"
         description: "Nama dari akun sesuai Chart of Accounts."
         synonyms: ["nama akun", "nama rekening"]
 
@@ -154,32 +108,32 @@ spec:
         synonyms: ["barang jasa", "pengadaan"]
 
       - name: "Volume_1"
-        data_type: "decimal(12,2)"
-        description: "Kuantitas atau jumlah item untuk dimensi pertama."
+        data_type: "varchar(50)"
+        description: "Kuantitas atau jumlah item untuk dimensi pertama (disimpan sebagai teks)."
         synonyms: ["jumlah 1", "jumlah satu", "kuantitas 1", "kuantitas satu", "volume 1", "volume satu"]
       - name: "Satuan_1"
         data_type: "varchar(50)"
         description: "Satuan untuk Volume 1 (contoh: orang, buah, unit)."
         synonyms: ["unit 1", "unit satu", "satuan 1", "satuan satu"]
       - name: "Volume_2"
-        data_type: "decimal(12,2)"
-        description: "Kuantitas atau jumlah item untuk dimensi kedua."
+        data_type: "varchar(50)"
+        description: "Kuantitas atau jumlah item untuk dimensi kedua (disimpan sebagai teks)."
         synonyms: ["jumlah 2", "jumlah dua", "kuantitas dua", "kuantitas 2", "volume 2", "volume dua"]
       - name: "Satuan_2"
         data_type: "varchar(50)"
         description: "Satuan untuk Volume 2 (contoh: hari, jam)."
         synonyms: ["unit 2", "unit dua", "satuan 2", "satuan dua"]
       - name: "Volume_3"
-        data_type: "decimal(12,2)"
-        description: "Kuantitas atau jumlah item untuk dimensi ketiga."
+        data_type: "varchar(50)"
+        description: "Kuantitas atau jumlah item untuk dimensi ketiga (disimpan sebagai teks)."
         synonyms: ["jumlah 3", "kuantitas 3", "volume 3", "jumlah tiga", "kuantitas tiga", "volume tiga"]
       - name: "Satuan_3"
         data_type: "varchar(50)"
         description: "Satuan untuk Volume 3."
         synonyms: ["unit 3", "unit tiga", "satuan 3", "satuan tiga"]
       - name: "Volume_4"
-        data_type: "decimal(12,2)"
-        description: "Kuantitas atau jumlah item untuk dimensi keempat."
+        data_type: "varchar(50)"
+        description: "Kuantitas atau jumlah item untuk dimensi keempat (disimpan sebagai teks)."
         synonyms: ["jumlah 4", "kuantitas 4", "volume 4", "jumlah empat", "kuantitas empat", "volume empat"]
       - name: "Satuan_4"
         data_type: "varchar(50)"
@@ -188,7 +142,7 @@ spec:
 
       - name: "Harga_Satuan"
         data_type: "decimal(18,2)"
-        description: "Biaya atau harga untuk satu unit dari sebuah item kegiatan."
+        description: "Biaya atau harga untuk satu unit dari sebuah item kegiatan. Tipe data: Angka desimal."
         synonyms: ["harga per item", "biaya satuan", "unit price"]
 
       - name: "Sumber_Dana"
@@ -203,15 +157,15 @@ spec:
 
       - name: "Jumlah"
         data_type: "decimal(18,2)"
-        description: "Nilai total anggaran untuk sebuah kegiatan. WAJIB GUNAKAN kolom ini jika pengguna bertanya tentang 'pagu', 'budget', 'total anggaran', atau 'biaya'."
+        description: "Nilai total anggaran untuk sebuah kegiatan. WAJIB GUNAKAN kolom ini jika pengguna bertanya tentang 'pagu', 'budget', 'total anggaran', atau 'biaya'. Tipe data: Angka desimal."
         synonyms: ["total anggaran", "total biaya", "pagu anggaran", "budget", "pagu", "anggaran"]
 
       - name: "Realisasi"
         data_type: "decimal(18,2)"
-        description: "Jumlah dana yang sudah benar-benar terpakai/dibelanjakan. Gunakan kolom ini untuk pertanyaan terkait 'penyerapan' atau 'dana terpakai'."
+        description: "Jumlah dana yang sudah benar-benar terpakai/dibelanjakan. Gunakan kolom ini untuk pertanyaan terkait 'penyerapan' atau 'dana terpakai'. Tipe data: Angka desimal."
         synonyms: ["penyerapan", "dana terpakai", "anggaran terpakai", "sudah dibelanjakan", "expenditure", "realisasi"]
 
       - name: "Sisa"
         data_type: "decimal(18,2)"
-        description: "Sisa dana yang belum digunakan, dihitung dari (Jumlah - Realisasi). Gunakan untuk pertanyaan tentang 'saldo' atau 'dana sisa'."
+        description: "Sisa dana yang belum digunakan, secara konseptual (Jumlah - Realisasi). Gunakan untuk pertanyaan tentang 'saldo' atau 'dana sisa'. Tipe data: Angka desimal."
         synonyms: ["sisa anggaran", "saldo", "dana sisa", "remaining budget", "sisa"]

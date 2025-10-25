@@ -12,7 +12,7 @@ async def create_chat_message(db: AsyncSession, message: schemas.ChatMessageCrea
     await db.refresh(db_message)
     return db_message
 
-async def get_chat_messages_by_room(db: AsyncSession, room_id: str, limit: int = 10) -> List[models.ChatMessage]:
+async def get_chat_messages_by_room(db: AsyncSession, room_id: int, limit: int = 10) -> List[models.ChatMessage]:
     """Reusable function to SELECT chat messages for a room, newest first."""
     stmt = (
         select(models.ChatMessage)
@@ -21,7 +21,8 @@ async def get_chat_messages_by_room(db: AsyncSession, room_id: str, limit: int =
         .limit(limit)
     )
     result = await db.execute(stmt)
-    return list(result.scalars().all())
+    messages = result.scalars().all()
+    return list(reversed(messages))  # Kembalikan dalam urutan lama ke baru
 
 # --- LLM Runs ---
 async def create_llm_run(db: AsyncSession, run_data: schemas.LLMRunCreate) -> models.LLMRun:
